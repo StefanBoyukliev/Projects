@@ -28,6 +28,7 @@ private:
 	vec3 Right;
 	vec3 Front;
 	vec3 WorldUp;
+	vec3 velocity;
 	
 	bool onGround;
 	
@@ -37,6 +38,9 @@ private:
 	GLfloat Speed;
 	GLfloat ZOOM;
 	GLfloat MouseSensitivity;
+	GLfloat Force;
+	const GLfloat gravity = -0.8f;
+	const GLfloat velocityLimit = 5.0f;
 
 	void UpdateCameraVectors() {
 		vec3 front;
@@ -58,6 +62,8 @@ public:
 		this->pitch = 0.0f;
 		this->jumping = false;
 		this->onGround = true;
+		this->velocity = vec3(0.0f, 0.0f, 0.0f);
+		this->Force = 40.0f;
 		Speed = mvmtspeed;
 		MouseSensitivity = mouse;
 		UpdateCameraVectors();
@@ -68,20 +74,20 @@ public:
 	}
 
 	void processKeyboard(Camera_Movement direction, GLfloat deltaTime) {
-		GLfloat camSpeed = Speed * deltaTime;
-		if(direction == FORWARD)
+		GLfloat camSpeed = Speed*deltaTime;
+		if(direction == FORWARD && velocity.x < velocityLimit)
 		{
-			Position += camSpeed*Front;
+			Position += camSpeed * Front;
 		}
-		if (direction == BACKWARD)
+		if (direction == BACKWARD && velocity.x > -velocityLimit)
 		{
 			Position -= camSpeed * Front;
 		}
-		if (direction == LEFT)
+		if (direction == LEFT && velocity.z > -velocityLimit)
 		{
 			Position -= camSpeed * Right;
 		}
-		if (direction == RIGHT)
+		if (direction == RIGHT && velocity.z < velocityLimit)
 		{
 			Position += camSpeed * Right;
 		}
@@ -89,31 +95,16 @@ public:
 		{
 			Position.y = 1.0f;
 		}
+		std::cout << velocity.x << "," << velocity.y << "," << velocity.z << std::endl;
 	}
 
 	vec3 getPosition() { return Position; }
-
-	void JumpUp() {
-		
-		while (Position.y < 4.0f) { Position += 0.015f*WorldUp; std::cout << "jumping" << " " << onGround << std::endl;
-		}
-		jumping = false;
-	}
-
-	void FallDown() {
-		std::cout << "falling" << " " << onGround << std::endl;
-		while (Position.y > 1.0f) { Position -= 0.03f*WorldUp; }
-		//Position.y = 1.0f;
-		onGround = true;
-		
-	}
 
 	void processJump() {
 		std::cout << "processing jump" << std::endl;
 		this->jumping = true;
 		this->onGround = false;
-		if (jumping) { this->JumpUp(); UpdateCameraVectors(); }
-		FallDown();
+		velocity = Force * WorldUp;
 	}
 
 	void ProcessMouse(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true)
@@ -131,6 +122,21 @@ public:
 				pitch = -89.0f;
 		}		
 		UpdateCameraVectors();
+	}
+
+	void Update(GLfloat dt) {
+		Position += velocity * dt;
+		if (Position.y > 1.0f)
+		{
+			velocity += gravity * WorldUp;
+		}
+		else 
+		{
+			Position.y = 1.0f;
+			onGround = true;
+			jumping = false;
+			velocity = vec3(0.0f, 0.0f, 0.0f);
+		}
 	}
 
 };

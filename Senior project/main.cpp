@@ -34,11 +34,6 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
 
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
-	{
-		camera.processJump();
-	}
-
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
@@ -89,6 +84,14 @@ void DoMovement() {
 		camera.processKeyboard(RIGHT, deltaTime);
 	}
 
+	if (keys[GLFW_KEY_SPACE] && camera.jumping == false)
+	{
+		camera.processJump();
+	}
+}
+
+void Update() {
+	camera.Update(deltaTime);
 }
 
 int main() {
@@ -240,6 +243,7 @@ int main() {
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 		DoMovement();
+		Update();
 
 		// Render
 		// Clear the colorbuffer
