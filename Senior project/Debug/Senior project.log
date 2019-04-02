@@ -5,4 +5,8 @@ c:\semester 8\openglroot\senior project\senior project\main.cpp(62): warning C42
 c:\semester 8\openglroot\senior project\senior project\main.cpp(63): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
 c:\semester 8\openglroot\senior project\senior project\main.cpp(65): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
 c:\semester 8\openglroot\senior project\senior project\main.cpp(66): warning C4244: '=': conversion from 'double' to 'GLfloat', possible loss of data
+  LINK : C:\Semester 8\OpenGLRoot\Senior project\Debug\Senior project.exe not found or not built by the last incremental link; performing full link
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\Semester 8\OpenGLRoot\Senior project\Debug\vc120.pdb'; linking object as if no debug info
   Senior project.vcxproj -> C:\Semester 8\OpenGLRoot\Senior project\Debug\Senior project.exe
