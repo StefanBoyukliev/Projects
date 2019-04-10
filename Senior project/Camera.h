@@ -5,8 +5,6 @@
 
 #include <gl/glew.h>
 
-#include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -23,10 +21,10 @@ enum Camera_Movement {
 class Camera {
 private:
 	vec3 Position;
-	vec3 Direction;
 	vec3 Up;
 	vec3 Right;
-	vec3 Front;
+	vec3 Look_Front;
+	vec3 Mvmnt_Direction_Front;
 	vec3 WorldUp;
 	vec3 velocity;
 	
@@ -39,17 +37,18 @@ private:
 	GLfloat ZOOM;
 	GLfloat MouseSensitivity;
 	GLfloat Force;
-	const GLfloat gravity = -0.8f;
+	const GLfloat gravity = -0.3f;
 	const GLfloat velocityLimit = 5.0f;
 
 	void UpdateCameraVectors() {
-		vec3 front;
-		front.x = cos(radians(yaw))*cos(radians(pitch));
-		front.y = sin(radians(pitch));
-		front.z = sin(radians(yaw))*cos(radians(pitch));
-		Front = normalize(front);
-		Right = normalize(cross(Front, WorldUp));
-		Up = normalize(cross(Right, Front));
+		vec3 look_front;
+		look_front.x = cos(radians(pitch)) * cos(radians(yaw));
+		look_front.y = sin(radians(pitch));
+		look_front.z = cos(radians(pitch)) * sin(radians(yaw));
+		this->Look_Front = normalize(look_front);
+		this->Right = normalize(cross(this->Look_Front, this->WorldUp));
+		this->Mvmnt_Direction_Front = normalize(cross(this->WorldUp, this->Right));
+		this->Up = normalize(cross(this->Right, this->Look_Front));
 	}
 
 public:
@@ -70,18 +69,18 @@ public:
 	}
 
 	mat4 GetViewMatrix() {
-		return lookAt(Position, Position + Front, Up);
+		return lookAt(Position, Position + Look_Front, Up);
 	}
 
 	void processKeyboard(Camera_Movement direction, GLfloat deltaTime) {
 		GLfloat camSpeed = Speed*deltaTime;
 		if(direction == FORWARD && velocity.x < velocityLimit)
 		{
-			Position += camSpeed * Front;
+			Position += camSpeed * Mvmnt_Direction_Front;
 		}
 		if (direction == BACKWARD && velocity.x > -velocityLimit)
 		{
-			Position -= camSpeed * Front;
+			Position -= camSpeed * Mvmnt_Direction_Front;
 		}
 		if (direction == LEFT && velocity.z > -velocityLimit)
 		{
@@ -95,7 +94,6 @@ public:
 		{
 			Position.y = 1.0f;
 		}
-		std::cout << velocity.x << "," << velocity.y << "," << velocity.z << std::endl;
 	}
 
 	vec3 getPosition() { return Position; }
@@ -117,9 +115,13 @@ public:
 		if (constrainPitch)
 		{
 			if (pitch > 89.0f)
+			{
 				pitch = 89.0f;
+			}
 			if (pitch < -89.0f)
+			{
 				pitch = -89.0f;
+			}
 		}		
 		UpdateCameraVectors();
 	}
