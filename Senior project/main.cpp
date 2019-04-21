@@ -147,6 +147,16 @@ int main() {
 	glEnable(GL_DEPTH);
 	glEnable(GL_DEPTH_TEST);
 
+	GLfloat ground[] = 
+	{
+		10.0f, 0.0f, 10.0f, 1.0f, 0.0f,
+		-10.0f, 0.0f, 10.0f, 0.0f, 0.0f,
+		-10.0f, 0.0f, -10.0f, 0.0f, 1.0f,
+		-10.0f, 0.0f, -10.0f, 0.0f, 1.0f,
+		10.0f, 0.0f, 10.0f, 1.0f, 0.0f,
+		10.0f, 0.0f, -10.0f, 1.0f, 1.0f
+	};
+
 	GLfloat vertices[] =
 	{
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -198,40 +208,39 @@ int main() {
 	glGenBuffers(1, &VBO);
 
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//shape
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)0);
-	glEnableVertexAttribArray(0);
-
-	//color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(1);
-
-	//texture
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 
 	//initialize texture
-	GLuint texture;
+	GLuint texture[2];
 	int t_ScreenWidth, t_hight;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	
+	glGenTextures(2, texture);
+
+	//binds and generates texture
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	unsigned char *image = SOIL_load_image("../../bricks.jpg", &t_ScreenWidth, &t_hight, 0, SOIL_LOAD_RGBA);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, t_ScreenWidth, t_hight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
+
+	int t_ScreenWidth1, t_hight1;
+
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	unsigned char *image2 = SOIL_load_image("../../concrete.jpg", &t_ScreenWidth1, &t_hight1, 0, SOIL_LOAD_RGBA);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, t_ScreenWidth1, t_hight1, 0, GL_RGBA, GL_UNSIGNED_BYTE, image2);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	SOIL_free_image_data(image2);
 
 
 	while (!glfwWindowShouldClose(window))
@@ -249,11 +258,29 @@ int main() {
 		// Clear the colorbuffer
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		glBindVertexArray(VAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		//shape
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)0);
+		glEnableVertexAttribArray(0);
+
+		//texture
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
+		glEnableVertexAttribArray(2);
+
 		//	draw
 		ourShader.Use();
+
+		//activates the 0th texture unit
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		//tells the fragment shader to look at the 0th texture unit when sampling color
 		glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture"), 0);
+
 		glm::mat4 projection(1);
 		projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 1000.0f);
 
@@ -271,11 +298,38 @@ int main() {
 		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-		glBindVertexArray(VAO);
-
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(ground), ground, GL_STATIC_DRAW);
+
+		//shape ground
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)0);
+
+		//texture ground
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
+
+		//activates the first texture unit
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture[1]);
+		//tells the fragment shader to look at the 0th texture unit when sampling color
+		glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture"), 1);
+		
+
+		glm::mat4 model2(1);
+		model2 = glm::translate(model2, vec3(0.0f, 0.0f, -7.0f));
+
+		GLuint viewLoc2 = glGetUniformLocation(ourShader.Program, "view");
+		GLuint projectionLoc2 = glGetUniformLocation(ourShader.Program, "projection");
+		GLuint modelLoc2 = glGetUniformLocation(ourShader.Program, "model");
+
+		glUniformMatrix4fv(viewLoc2, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projectionLoc2, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(model2));
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
@@ -284,6 +338,7 @@ int main() {
 
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+
 
 	glfwTerminate();
 	return EXIT_SUCCESS;
